@@ -1,0 +1,6 @@
+dt <- fread('C:\\Users\\Zz\\Desktop\\486-DKD\\finngen_R9_DM_NEPHROPATHY_EXMORE',nrow=1000)
+library(nnMR)
+setwd('C:\\Users\\Zz\\Desktop\\486-DKD')
+sink(type="message")
+met_1400(exposure_path='D:\\1400\\exposure\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+        p_threshold=5e-8,kb=10000,r2=0.001,outcome_source = 'finn')

@@ -1,0 +1,512 @@
+cat('(',i,'/',total_num,') 当前分析：',file_id,sep='')
+exposure_path <- paste0('D:\\486\\原始文件\\',file_id,'.txt.gz')
+# 读取暴露数据
+exposure_row_data <- fread(exposure_path,fill = T)
+exposure_data <- exposure_row_data[,-c(5,6,7,11:15,19:34)]
+colnames(exposure_data) <- c("rsid", "alt","ref","eaf","beta","se","pval","N",
+"chr","pos")
+exposure_data <- nn_read_exposure_data(filename = exposure_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+# LDSC分析
+res <- nn_LDSC(exposure_data,outcome_data,an='EUR',
+ld='C:\\Users\\Zz\\Desktop\\lddsc\\eur',
+wld='C:\\Users\\Zz\\Desktop\\lddsc\\eur')
+if (!is.list(res)){
+new_row <- as.data.frame('h2.trait'=file_id,'h2.mean_chisq'=NA,
+'h2.lambda_gc'=NA,'h2.intercept'=NA,'h2.intercept_se'=NA,
+'h2.ratio'=NA,'h2.ratio_se'=NA,'h2.h2_observed'=NA,'h2.h2_observed_se'=NA,
+'h2.h2_Z'=NA,'h2.h2_p'=NA,'rg.rg'=NA,'rg.rg_se'=NA,'rg.rg_p'=NA)
+}else{
+h2 <- as.data.frame(res[1])[1,]
+rg <- as.data.frame(res[2])[,-2]
+new_row <- merge(h2,rg,by.x = 'h2.trait',by.y = 'rg.trait1')
+new_row$h2.trait <- file_id
+}
+if (file.exists(result_path)){
+existing_data <- fread(result_path,fill = T)[-1,]
+new_data <- rbind(existing_data,new_row)
+write.csv(new_data,result_path)
+}else{
+write.csv(new_row,result_path)
+}
+}
+for (i in 1:nrow(file_list)){
+file_id <- file_list[[i,1]]
+cat('(',i,'/',total_num,') 当前分析：',file_id,sep='')
+exposure_path <- paste0('D:\\486\\原始文件\\',file_id,'.txt.gz')
+# 读取暴露数据
+exposure_row_data <- fread(exposure_path,fill = T)
+exposure_data <- exposure_row_data[,-c(5,6,7,11:15,19:34)]
+colnames(exposure_data) <- c("rsid", "alt","ref","eaf","beta","se","pval","N",
+"chr","pos")
+exposure_data <- nn_read_exposure_data(filename = exposure_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+# LDSC分析
+res <- nn_LDSC(exposure_data,outcome_data,an='EUR',
+ld='C:\\Users\\Zz\\Desktop\\lddsc\\eur',
+wld='C:\\Users\\Zz\\Desktop\\lddsc\\eur')
+if (!is.list(res)){
+new_row <- as.data.frame('h2.trait'=file_id,'h2.mean_chisq'=NA,
+'h2.lambda_gc'=NA,'h2.intercept'=NA,'h2.intercept_se'=NA,
+'h2.ratio'=NA,'h2.ratio_se'=NA,'h2.h2_observed'=NA,'h2.h2_observed_se'=NA,
+'h2.h2_Z'=NA,'h2.h2_p'=NA,'rg.rg'=NA,'rg.rg_se'=NA,'rg.rg_p'=NA)
+}else{
+h2 <- as.data.frame(res[1])[1,]
+rg <- as.data.frame(res[2])[,-2]
+new_row <- merge(h2,rg,by.x = 'h2.trait',by.y = 'rg.trait1')
+new_row$h2.trait <- file_id
+}
+if (file.exists(result_path)){
+existing_data <- fread(result_path,fill = T)[-1,]
+new_data <- rbind(existing_data,new_row)
+write.csv(new_data,result_path)
+}else{
+write.csv(new_row,result_path)
+}
+}
+for (i in 1:nrow(file_list)){
+file_id <- file_list[[i,1]]
+cat('(',i,'/',total_num,') 当前分析：',file_id,sep='')
+exposure_path <- paste0('D:\\486\\原始文件\\',file_id,'.txt.gz')
+# 读取暴露数据
+exposure_row_data <- fread(exposure_path,fill = T)
+exposure_data <- exposure_row_data[,-c(5,6,7,11:15,19:34)]
+colnames(exposure_data) <- c("rsid", "alt","ref","eaf","beta","se","pval","N",
+"chr","pos")
+exposure_data <- nn_read_exposure_data(filename = exposure_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+# LDSC分析
+res <- nn_LDSC(exposure_data,outcome_data,an='EUR',
+ld='C:\\Users\\Zz\\Desktop\\lddsc\\eur',
+wld='C:\\Users\\Zz\\Desktop\\lddsc\\eur')
+if (!is.list(res)){
+new_row <- as.data.frame('h2.trait'=file_id,'h2.mean_chisq'=NA,
+'h2.lambda_gc'=NA,'h2.intercept'=NA,'h2.intercept_se'=NA,
+'h2.ratio'=NA,'h2.ratio_se'=NA,'h2.h2_observed'=NA,'h2.h2_observed_se'=NA,
+'h2.h2_Z'=NA,'h2.h2_p'=NA,'rg.rg'=NA,'rg.rg_se'=NA,'rg.rg_p'=NA)
+}else{
+h2 <- as.data.frame(res[1])[1,]
+rg <- as.data.frame(res[2])[,-2]
+new_row <- merge(h2,rg,by.x = 'h2.trait',by.y = 'rg.trait1')
+new_row$h2.trait <- file_id
+}
+if (file.exists(result_path)){
+existing_data <- fread(result_path,fill = T)[-1,]
+new_data <- rbind(existing_data,new_row)
+write.csv(new_data,result_path)
+}else{
+write.csv(new_row,result_path)
+}
+}
+# 设置工作路径
+setwd('C:\\Users\\Zz\\Desktop\\饮食-代谢-ibs\\finnIBS')
+result_path <- 'LDSC_data.csv'
+checkpoint_path <- 'checkpoint.RData'
+outcome_name <- 'Finn-IBS'
+mr_threshold <- 5e-6
+# 读取结局数据
+outcome_path <- "../finngen_R9_K11_IBS.gz"
+outcome_row_data<-fread(file = outcome_path,header = T)
+outcome_data <- outcome_row_data[,-c(6,8,12:13)]
+outcome_data$N <- 311254
+outcome_row_data<-data.table::fread(file = outcome_path,header = T)
+outcome_data <- outcome_row_data[,-c(6,8,12:13)]
+outcome_data$N <- 311254
+colnames(outcome_data) <- c("chr", "pos","ref","alt","rsid","pval","beta","se",
+"eaf","N")
+outcome_data <- nn_read_outcome_data(filename = outcome_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+outcome_data <- nnMR::nn_read_outcome_data(filename = outcome_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+# 设置工作路径
+setwd('C:\\Users\\Zz\\Desktop\\饮食-代谢-ibs\\finnIBS')
+result_path <- 'LDSC_data.csv'
+checkpoint_path <- 'checkpoint.RData'
+outcome_name <- 'Finn-IBS'
+mr_threshold <- 5e-6
+# 加载存档
+if (file.exists(checkpoint_path)) {
+load(checkpoint_path)
+} else {
+processed_files <- c()
+}
+# 读取结局数据
+outcome_path <- "../finngen_R9_K11_IBS.gz"
+outcome_row_data<-data.table::fread(file = outcome_path,header = T)
+outcome_row_data<-data.table::fread(file = outcome_path,header = T,fill = T)
+outcome_data <- outcome_row_data[,-c(6,8,12:13)]
+outcome_data$N <- 311254
+colnames(outcome_data) <- c("chr", "pos","ref","alt","rsid","pval","beta","se",
+"eaf","N")
+outcome_data <- nnMR::nn_read_outcome_data(filename = outcome_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+file_list <- readxl::read_xlsx('./ldsc_name.xlsx')
+total_num <- nrow(file_list)
+for (i in 1:nrow(file_list)){
+file_id <- file_list[[i,1]]
+cat('(',i,'/',total_num,') 当前分析：',file_id,sep='')
+exposure_path <- paste0('D:\\486\\原始文件\\',file_id,'.txt.gz')
+# 读取暴露数据
+exposure_row_data <- data.table::fread(exposure_path,fill = T)
+exposure_data <- exposure_row_data[,-c(5,6,7,11:15,19:34)]
+colnames(exposure_data) <- c("rsid", "alt","ref","eaf","beta","se","pval","N",
+"chr","pos")
+exposure_data <- nnMR::nn_read_exposure_data(filename = exposure_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+# LDSC分析
+res <- nnMR::nn_LDSC(exposure_data,outcome_data,an='EUR',
+ld='C:\\Users\\Zz\\Desktop\\lddsc\\eur',
+wld='C:\\Users\\Zz\\Desktop\\lddsc\\eur')
+if (!is.list(res)){
+new_row <- as.data.frame('h2.trait'=file_id,'h2.mean_chisq'=NA,
+'h2.lambda_gc'=NA,'h2.intercept'=NA,'h2.intercept_se'=NA,
+'h2.ratio'=NA,'h2.ratio_se'=NA,'h2.h2_observed'=NA,'h2.h2_observed_se'=NA,
+'h2.h2_Z'=NA,'h2.h2_p'=NA,'rg.rg'=NA,'rg.rg_se'=NA,'rg.rg_p'=NA)
+}else{
+h2 <- as.data.frame(res[1])[1,]
+rg <- as.data.frame(res[2])[,-2]
+new_row <- merge(h2,rg,by.x = 'h2.trait',by.y = 'rg.trait1')
+new_row$h2.trait <- file_id
+}
+if (file.exists(result_path)){
+existing_data <- data.table::fread(result_path,fill = T)[-1,]
+new_data <- rbind(existing_data,new_row)
+write.csv(new_data,result_path)
+}else{
+write.csv(new_row,result_path)
+}
+}
+# 读取暴露数据
+exposure_row_data <- data.table::fread(exposure_path,fill = T)
+exposure_data <- exposure_row_data[,-c(5,6,7,11:15,19:34)]
+colnames(exposure_data) <- c("rsid", "alt","ref","eaf","beta","se","pval","N",
+"chr","pos")
+exposure_data <- nnMR::nn_read_exposure_data(filename = exposure_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+exposure_data <- nn_read_exposure_data(filename = exposure_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+nn_read_exposure_data <-
+function (filename, clump = FALSE, sep = " ", phenotype_col = "Phenotype",
+snp_col = "SNP", beta_col = "beta", se_col = "se", eaf_col = "eaf",
+effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+pval_col = "pval", units_col = "units", ncase_col = "ncase",
+ncontrol_col = "ncontrol", samplesize_col = "samplesize",
+gene_col = "gene", id_col = "id", min_pval = 1e-200, log_pval = FALSE,
+chr_col = "chr", pos_col = "pos")
+for (i in 1:nrow(file_list)){
+file_id <- file_list[[i,1]]
+cat('(',i,'/',total_num,') 当前分析：',file_id,sep='')
+exposure_path <- paste0('D:\\486\\原始文件\\',file_id,'.txt.gz')
+# 读取暴露数据
+exposure_row_data <- data.table::fread(exposure_path,fill = T)
+exposure_data <- exposure_row_data[,-c(5,6,7,11:15,19:34)]
+colnames(exposure_data) <- c("rsid", "alt","ref","eaf","beta","se","pval","N",
+"chr","pos")
+exposure_data <- nn_read_exposure_data(filename = exposure_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+# LDSC分析
+res <- nnMR::nn_LDSC(exposure_data,outcome_data,an='EUR',
+ld='C:\\Users\\Zz\\Desktop\\lddsc\\eur',
+wld='C:\\Users\\Zz\\Desktop\\lddsc\\eur')
+if (!is.list(res)){
+new_row <- as.data.frame('h2.trait'=file_id,'h2.mean_chisq'=NA,
+'h2.lambda_gc'=NA,'h2.intercept'=NA,'h2.intercept_se'=NA,
+'h2.ratio'=NA,'h2.ratio_se'=NA,'h2.h2_observed'=NA,'h2.h2_observed_se'=NA,
+'h2.h2_Z'=NA,'h2.h2_p'=NA,'rg.rg'=NA,'rg.rg_se'=NA,'rg.rg_p'=NA)
+}else{
+h2 <- as.data.frame(res[1])[1,]
+rg <- as.data.frame(res[2])[,-2]
+new_row <- merge(h2,rg,by.x = 'h2.trait',by.y = 'rg.trait1')
+new_row$h2.trait <- file_id
+}
+if (file.exists(result_path)){
+existing_data <- data.table::fread(result_path,fill = T)[-1,]
+new_data <- rbind(existing_data,new_row)
+write.csv(new_data,result_path)
+}else{
+write.csv(new_row,result_path)
+}
+}
+cat('(',i,'/',total_num,') 当前分析：',file_id,sep='')
+exposure_path <- paste0('D:\\486\\原始文件\\',file_id,'.txt.gz')
+# 读取暴露数据
+exposure_row_data <- data.table::fread(exposure_path,fill = T)
+exposure_data <- exposure_row_data[,-c(5,6,7,11:15,19:34)]
+colnames(exposure_data) <- c("rsid", "alt","ref","eaf","beta","se","pval","N",
+"chr","pos")
+exposure_data <- nn_read_exposure_data(filename = exposure_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+exposure_data <- nn_read_exposure_data(filename = exposure_data,
+sep = ',',
+snp_col = 'rsid',
+effect_allele_col = 'alt',
+other_allele_col = 'ref',
+eaf_col = 'eaf',
+beta_col = 'beta',
+se_col = 'se',
+pval_col = 'pval',
+samplesize_col = 'N',
+chr_col = 'chr',
+pos_col = 'pos')
+nn_read_exposure_data <-
+function (filename, clump = FALSE, sep = " ", phenotype_col = "Phenotype",
+snp_col = "SNP", beta_col = "beta", se_col = "se", eaf_col = "eaf",
+effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+pval_col = "pval", units_col = "units", ncase_col = "ncase",
+ncontrol_col = "ncontrol", samplesize_col = "samplesize",
+gene_col = "gene", id_col = "id", min_pval = 1e-200, log_pval = FALSE,
+chr_col = "chr", pos_col = "pos")
+nn_read_exposure_data <-
+function (filename, clump = FALSE, sep = " ", phenotype_col = "Phenotype",
+snp_col = "SNP", beta_col = "beta", se_col = "se", eaf_col = "eaf",
+effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+pval_col = "pval", units_col = "units", ncase_col = "ncase",
+ncontrol_col = "ncontrol", samplesize_col = "samplesize",
+gene_col = "gene", id_col = "id", min_pval = 1e-200, log_pval = FALSE,
+chr_col = "chr", pos_col = "pos")
+nn_read_exposure_data <-
+function (filename, clump = FALSE, sep = " ", phenotype_col = "Phenotype",
+snp_col = "SNP", beta_col = "beta", se_col = "se", eaf_col = "eaf",
+effect_allele_col = "effect_allele", other_allele_col = "other_allele",
+pval_col = "pval", units_col = "units", ncase_col = "ncase",
+ncontrol_col = "ncontrol", samplesize_col = "samplesize",
+gene_col = "gene", id_col = "id", min_pval = 1e-200, log_pval = FALSE,
+chr_col = "chr", pos_col = "pos")
+dt <- fread('C:\\Users\\Zz\\Desktop\\486-DKD\\DKD.txt',nrow=1000)
+library(data.table)
+dt <- fread('C:\\Users\\Zz\\Desktop\\486-DKD\\DKD.txt',nrow=1000)
+View(dt)
+library(readxl)
+setwd('C:\\Users\\Zz\\Desktop\\486-DKD')
+overview <- read_xlsx('ID-代谢-分类对应表去重-翻译.xlsx')
+View(overview)
+dt <- fread('C:\\Users\\Zz\\Desktop\\486-DKD\\finngen_R9_DM_NEPHROPATHY_EXMORE',nrow=1000)
+View(dt)
+dt <- fread('C:\\Users\\Zz\\Desktop\\486-DKD\\finngen_R9_DM_NEPHROPATHY_EXMORE',nrow=1000)
+View(dt)
+setwd('C:\\Users\\Zz\\Desktop\\486-DKD')
+met_486(exposure_path='D:\\486\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+p_threshold=5e-8,kb=10000,r2=0.001,outcome_source = 'finn')
+library(nnMR)
+met_486(exposure_path='D:\\486\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+p_threshold=5e-8,kb=10000,r2=0.001,outcome_source = 'finn')
+setwd('C:\\Users\\Zz\\Desktop\\486-DKD')
+overview <- read_xlsx('ID-代谢-分类对应表去重-翻译.xlsx')
+dt1 <- read.csv('486(1e-06)-finn.csv')
+View(dt1)
+dt1 <- read.csv('486(1e-06)-finn.csv')[,-1]
+View(dt1)
+dt2 <- read.csv('486(5e-07)-finn.csv')[,-1]
+dt3 <- read.csv('486(5e-08)-finn.csv')[,-1]
+dt4 <-
+dti <- rbind(dt1,dt2)
+dt <- rbind(dti,dt3)
+View(dt)
+data <- merge(dt,overview,by.x = 'exposure',by.y ='ID' ,all.x = T)
+View(data)
+library(writexl)
+write_xlsx(data,'486-DKD.xlsx')
+data2 <- data
+View(data2)
+data2[beta==0] <- NA
+data2$beta <- ifelse(data2$beta==0,NA,data2$beta)
+data2$p.value <- ifelse(data2$p.value==0,NA,data2$p.value)
+data2$or.95CI. <- ifelse(data2$or.95CI.==0,NA,data2$or.95CI.)
+write_xlsx(data2,'486-DKD.xlsx')
+met_1400(exposure_path='D:\\1400\\exposure\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+p_threshold=5e-6,kb=10000,r2=0.001,outcome_source = 'finn')
+library(nnMR)
+setwd('C:\\Users\\Zz\\Desktop\\486-DKD')
+met_1400(exposure_path='D:\\1400\\exposure\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+p_threshold=5e-6,kb=10000,r2=0.001,outcome_source = 'finn')
+library(nnMR)
+setwd('C:\\Users\\Zz\\Desktop\\486-DKD')
+met_1400(exposure_path='D:\\1400\\exposure\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+p_threshold=5e-6,kb=10000,r2=0.001,outcome_source = 'finn')
+setwd('C:\\Users\\Zz\\Desktop\\486-DKD')
+overview <- read_xlsx('ID-代谢-分类对应表去重-翻译.xlsx')
+library(readxl)
+library(writexl)
+setwd('C:\\Users\\Zz\\Desktop\\486-DKD')
+overview <- read_xlsx('ID-代谢-分类对应表去重-翻译.xlsx')
+dt1 <- read.csv('486(1e-06)-finn.csv')[,-1]
+dt2 <- read.csv('486(5e-07)-finn.csv')[,-1]
+dt3 <- read.csv('486(5e-08)-finn.csv')[,-1]
+dt4 <- read.csv('486(5e-06)-finn.csv')[,-1]
+dti <- rbind(dt1,dt2)
+dtii <- rbind(dt3,dt4)
+dt <- rbind(dti,dtii)
+data <- merge(dt,overview,by.x = 'exposure',by.y ='ID' ,all.x = T)
+data2 <- data
+data2$or.95CI. <- ifelse(data2$or.95CI.==0,NA,data2$or.95CI.)
+data2$beta <- ifelse(data2$beta==0,NA,data2$beta)
+data2$p.value <- ifelse(data2$p.value==0,NA,data2$p.value)
+write_xlsx(data2,'486-DKD.xlsx')
+met_1400(exposure_path='D:\\1400\\exposure\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+p_threshold=5e-8,kb=10000,r2=0.001,outcome_source = 'finn')
+library(nnMR)
+setwd('C:\\Users\\Zz\\Desktop\\486-DKD')
+sink(type="message")
+met_1400(exposure_path='D:\\1400\\exposure\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+p_threshold=5e-8,kb=10000,r2=0.001,outcome_source = 'finn')
+hg <- fread('snp150_hg19.txt')
+library(data.table)
+hg <- fread('snp150_hg19.txt')
+setwd('C:\\Users\\Zz\\Desktop\\饮食-代谢-ibs\\rewrite')
+hg <- fread('snp150_hg19.txt')
+View(hg[1:100,])
+met <- fread(paste0(file_name,'txt.gz'))
+file_name <- 'M34214'
+met <- fread(paste0(file_name,'txt.gz'))
+met <- fread(paste0(file_name,'txt.gz'))
+met <- fread(paste0(file_name,'.txt.gz'))
+met <- fread(paste0(file_name,'.txt.gz'),fill = T)
+View(met[1:100,])
+dt <- merge(met,hg,by.x='MarkerName',by.y='name',all.x=T)
+View(dt[1:100,])
+library(tidyr)
+colnames(dt)
+df_separated <- separate(dt, chromosome:start, into = c("new_chromosome", "new_start"), sep = ":")
+df_separated <- separate(dt, 'chromosome:start', into = c("new_chromosome", "new_start"), sep = ":")
+library(readxl)
+library(writexl)
+dt1 <- read_xlsx('486代谢物(1e-6)–IEUIBS.xlsx')[,-1]
+setwd('C:\\Users\\Zz\\Desktop\\饮食-代谢-ibs\\ieuIBS')
+overview <- read_xlsx('..\\ID-代谢-分类对应表去重-翻译.xlsx')
+dt1 <- read_xlsx('486代谢物(1e-6)–IEUIBS.xlsx')[,-1]
+View(dt1)
+dt1 <- read_xlsx('486代谢物(1e-6)–IEUIBS.xlsx')
+dt2 <- read_xlsx('486代谢物(5e-6)–IEUIBS.xlsx')
+dt3 <- read_xlsx('486代谢物(5e-7)–IEUIBS.xlsx')
+dt4 <- read_xlsx('486代谢物(5e-8)–IEUIBS.xlsx')
+View(dt2)
+dti <- rbind(dt1,dt2)
+dtii <- rbind(dt3,dt4)
+dtx <- rbind(dti,dtii)
+data <- merge(dtx,overview,by.x = 'exposure',by.y ='ID' ,all.x = T)
+View(data)
+View(dt1)
+View(overview)
+overview <- read_xlsx('..\\ID-代谢-分类对应表去重-翻译.xlsx')[,4]
+data <- merge(dtx,overview,by.x = 'exposure',by.y ='ID' ,all.x = T)
+overview <- read_xlsx('..\\ID-代谢-分类对应表去重-翻译.xlsx')[,c(1,4)]
+data <- merge(dtx,overview,by.x = 'exposure',by.y ='ID' ,all.x = T)
+View(data)
+write_xlsx(data2,'486-ieuIBS-translated.xlsx')
+write_xlsx(data,'486-ieuIBS-translated.xlsx')
+View(df_separated)
+View(df_separated[1:100,])
+fwrite(,paste0('rewrite_',file_name,'.txt.gz'))
+fwrite(df_separated,paste0('rewrite_',file_name,'.txt.gz'))
+setwd('C:\\Users\\Zz\\Desktop\\饮食-代谢-ibs\\rewrite')
+fwrite(df_separated,paste0('rewrite_',file_name,'.txt.gz'))

@@ -1,0 +1,21 @@
+library(readxl)
+library(writexl)
+setwd('C:\\Users\\Zz\\Desktop\\饮食-代谢-ibs\\ieuIBS')
+overview <- read_xlsx('..\\ID-代谢-分类对应表去重-翻译.xlsx')[,c(1,4)]
+dt1 <- read_xlsx('486代谢物(1e-6)–IEUIBS.xlsx')
+dt2 <- read_xlsx('486代谢物(5e-6)–IEUIBS.xlsx')
+dt3 <- read_xlsx('486代谢物(5e-7)–IEUIBS.xlsx')
+dt4 <- read_xlsx('486代谢物(5e-8)–IEUIBS.xlsx')
+dti <- rbind(dt1,dt2)
+dtii <- rbind(dt3,dt4)
+dtx <- rbind(dti,dtii)
+
+
+data <- merge(dtx,overview,by.x = 'exposure',by.y ='ID' ,all.x = T)
+data2 <- data
+data2$or.95CI. <- ifelse(data2$or.95CI.==0,NA,data2$or.95CI.)
+data2$beta <- ifelse(data2$beta==0,NA,data2$beta)
+data2$p.value <- ifelse(data2$p.value==0,NA,data2$p.value)
+write_xlsx(data,'486-ieuIBS-translated.xlsx')
+
+

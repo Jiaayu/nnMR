@@ -1,0 +1,24 @@
+setwd('C:\\Users\\Zz\\Desktop\\486-DKD')
+met_486(exposure_path='D:\\486\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+        p_threshold=5e-6,kb=10000,r2=0.001,outcome_source = 'finn')
+
+
+
+setwd('C:\\Users\\Zz\\Desktop\\486-DKD')
+met_1400(exposure_path='D:\\1400\\exposure\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+         p_threshold=1e-6,kb=10000,r2=0.001,outcome_source = 'finn')
+
+
+
+# 如果存档不对
+dt <- read.csv('1400(5e-06)-finn.csv')[,2]
+dt <- as.vector(dt)
+checkpoint <- dt
+save(checkpoint,file = '1400(5e-06)-finn.RData')
+
+
+setwd('C:\\Users\\Zz\\Desktop\\gastroduodenal')
+nn_LDSC_auto(exposure_path='D:\\1400\\原文件',exposure_source=1400,
+             outcome_path='finngen_R9_K11_GASTRODUOULC.gz',outcome_source='finn',outcome_case=329603)
+
+df_separated <- separate(dt, 'chromosome:start', into = c("new_chromosome", "new_start"), sep = ":")

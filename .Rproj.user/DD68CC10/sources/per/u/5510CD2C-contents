@@ -1,0 +1,20 @@
+setwd('C:\\Users\\Zz\\Desktop\\饮食-代谢-ibs\\rewrite')
+library(data.table)
+library(tidyr)
+file_name <- 'M34214'
+hg <- fread('snp150_hg19.txt')
+met <- fread(paste0(file_name,'.txt.gz'),fill = T)
+#View(hg[1:100,])
+#View(met[1:100,])
+dt <- merge(met,hg,by.x='MarkerName',by.y='name',all.x=T)
+#View(dt[1:100,])
+#colnames(dt)
+
+
+df_separated <- separate(dt, 'chromosome:start', into = c("new_chromosome", "new_start"), sep = ":")
+View(df_separated[1:100,])
+
+fwrite(df_separated,paste0('rewrite_',file_name,'.txt.gz'))
+
+
+
