@@ -1,3 +1,4 @@
+#' @export
 nn_harmonise_data <- function (exposure_dat, outcome_dat, action = 2)
 {
   stopifnot(all(action %in% 1:3))

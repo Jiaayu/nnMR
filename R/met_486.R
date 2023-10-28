@@ -6,8 +6,9 @@
 #' @param kb Clump时的kb值，默认10000
 #' @param r2 Clump时的r2，默认0.001
 #' @param outcome_source 结局数据的来源，可选'ieu','finn'，会自动格式化结局
-met_486 <- function(exposure_path,outcome_path,
-                    p_threshold=5e-8,kb=10000,r2=0.001,outcome_source){
+met_486 <- function(exposure_path,exposure_name,outcome_path,outcome_name,
+                    p_threshold=5e-8,kb=10000,r2=0.001,outcome_source,result_path){
+
   if (outcome_source=='ieu'){
     outcome_snp <<- 'variant_id'
     outcome_beta<<-'beta'
@@ -25,33 +26,46 @@ met_486 <- function(exposure_path,outcome_path,
     outcome_eaf<<-'af_alt'
     outcome_pval<<-'pval'
   }else{
-    stop('error')
+    print(outcome_source)
   }
   # 遍历暴露文件
   start_time <<- proc.time()[3]
-  checkpoint_path<<-paste0('486(',p_threshold,')-',outcome_source,'.RData')
+  if (!dir.exists('harmonise_file')){
+    dir.create('harmonise_file')
+  }
+  if (!dir.exists('plot')){
+    dir.create('plot')
+  }
+
+  checkpoint_path<<-paste0('486(',p_threshold,')-',outcome_name,'.RData')
   if (file.exists(checkpoint_path)){
     load(checkpoint_path)
   }else{
     checkpoint <<- c()
   }
 
-  final_path=paste0('486(',p_threshold,')-',outcome_source,'.csv')
+  final_path=paste0('486(',p_threshold,')-',outcome_name,'.csv')
   all_files <- list.files(path = exposure_path)
   csv_files <<- all_files[grepl("\\.csv$", all_files)]
+  if (outcome_source=='other'){
+    outcome_row_data <- outcome_path
+  }else{
+    outcome_row_data <- data.table::fread(outcome_path,header = T,fill = T)
+  }
 
-  outcome_row_data <- data.table::fread(outcome_path,header = T,fill = T)
   total_count <- length(csv_files)
   now_count <<- 1
   skip_next <<- FALSE
   # 循环读取csv
   for (file_name in csv_files){
+
+
     file_id <- gsub("\\.csv$", "", file_name)
 
     # 主程序
     if (!(file_id %in% checkpoint)){
       cat('(',now_count,'/',total_count,')正在分析 ',file_id,'...',sep = '')
-        exposure_raw_data <- nn_read_exposure_data(
+        exposure_raw_data <- nnMR::nn_read_exposure_data(
         file=paste0(exposure_path,'\\',file_name),
         sep = ",",
         snp_col = "MarkerName",
@@ -61,83 +75,52 @@ met_486 <- function(exposure_path,outcome_path,
         other_allele_col = "Allele2",
         eaf_col = "Freq1",
         pval_col = "P-value",
-        phenotype_col='exposure'
+        samplesize_col = 'TotalSampleSize',
+        chr_col = 'Chr',
+        pos_col = 'Pos',
+        phenotype_col=file_id,
       )
+      exposure_raw_data$exposure <- file_id
 
       # 筛选P
       exp_dat <- exposure_raw_data[exposure_raw_data$pval.exposure<p_threshold,]
 
       # SNP过少跳过
       if (nrow(exp_dat)<3){
-        data_row <- data.frame('exposure'=file_id,'outcome'=outcome_source,'p_threshold'=p_threshold,'kb'=kb,'r2'=r2,
-                               'NO.SNP'=nrow(exp_dat_clumped),'beta'=NA,
-                               'p.value'=NA,'or.95CI'=NA)
-        if (!file.exists(final_path)){
-          write.csv(data_row,final_path)
-        }else{
-          existing_data <- read.csv(final_path)[,-1]
-          new_data <- rbind(existing_data,data_row)
-          write.csv(new_data,final_path)
-        }
+        cat('SNP不足，已跳过\n')
         checkpoint <<- c(checkpoint,file_id)
         save(checkpoint,file = checkpoint_path)
         now_count <<- now_count+1
-        cat('SNP不足，已跳过\n')
         next
       }
 
 
       # Clump
-      tryCatch({exp_dat_clumped <- exp_dat %>%
-        rename(rsid = SNP,
-               pval = pval.exposure) %>%
-        nn_ld_clump(dat = .,
-                    clump_kb = kb,
-                    clump_r2 = r2,
-                    clump_p = 1,
-                    plink_bin =plinkbinr::get_plink_exe(),
-                    bfile = "D:\\clump_pop\\EUR")%>%
-        rename(SNP = rsid,
-               pval.exposure = pval)},
-        error=function(e){
-          print('error,skipping')
-          data_row <- data.frame('exposure'=file_id,'outcome'=outcome_source,'p_threshold'=p_threshold,'kb'=kb,'r2'=r2,
-                                 'NO.SNP'=NA,'beta'=NA,
-                                 'p.value'=NA,'or.95CI'=NA)
-          if (!file.exists(final_path)){
-            write.csv(data_row,final_path)
-          }else{
-            existing_data <- read.csv(final_path)[,-1]
-            new_data <- rbind(existing_data,data_row)
-            write.csv(new_data,final_path)
-          }
-          checkpoint <<- c(checkpoint,file_id)
-          save(checkpoint,file = checkpoint_path)
-          now_count <<- now_count+1
-          cat('SNP不足，已跳过\n')
-          skip_next <<- TRUE
-        }
-
-
-
-      )
-      if (skip_next) {
-        skip_next <<- FALSE
+      tryCatch({
+        exp_dat_clumped <- exp_dat %>%
+          rename(rsid = SNP,
+                 pval = pval.exposure) %>%
+          nnMR::nn_ld_clump(dat = .,
+                            clump_kb = kb,
+                            clump_r2 = r2,
+                            clump_p = 1,
+                            plink_bin =plinkbinr::get_plink_exe(),
+                            bfile = "D:\\clump_pop\\EUR")%>%
+          rename(SNP = rsid,
+                 pval.exposure = pval)
+      },error=function(error){
+        skip_next <<- TRUE
+      })
+      if (skip_next){
+        checkpoint <<- c(checkpoint,file_id)
+        save(checkpoint,file = checkpoint_path)
+        now_count <<- now_count+1
+        cat('SNP不足，已跳过\n')
         next
       }
 
       # SNP过少保存
       if (nrow(exp_dat_clumped)<3){
-        data_row <- data.frame('exposure'=file_id,'outcome'=outcome_source,'p_threshold'=p_threshold,'kb'=kb,'r2'=r2,
-                               'NO.SNP'=nrow(exp_dat_clumped),'beta'=NA,
-                               'p.value'=NA,'or.95CI'=NA)
-        if (!file.exists(final_path)){
-          write.csv(data_row,final_path)
-        }else{
-          existing_data <- read.csv(final_path)[,-1]
-          new_data <- rbind(existing_data,data_row)
-          write.csv(new_data,final_path)
-        }
         checkpoint <<- c(checkpoint,file_id)
         save(checkpoint,file = checkpoint_path)
         now_count <<- now_count+1
@@ -145,39 +128,40 @@ met_486 <- function(exposure_path,outcome_path,
         next
       }
 
-      # 筛选F
-      exp_dat_clumped['F'] <- (exp_dat_clumped['beta.exposure']^2) / (exp_dat_clumped['se.exposure']^2)
-      exp_dat_clumped <- exp_dat_clumped[exp_dat_clumped$F >= 10,]
+      # 筛选F和R2
+      exp_dat_clumped <- filter_F(exp_dat_clumped)
+      if (nrow(exp_dat_clumped)<3){
+        checkpoint <<- c(checkpoint,file_id)
+        save(checkpoint,file = checkpoint_path)
+        now_count <<- now_count+1
+        cat('SNP不足，已跳过\n')
+        next
+      }
 
       # 读取结局
-      out_dat <- nn_read_outcome_data(
-        snps = exp_dat_clumped$SNP,
-        filename = outcome_row_data,
-        #sep = "\t",
-        snp_col = outcome_snp,
-        beta_col = outcome_beta,
-        se_col = outcome_se,
-        effect_allele_col = outcome_effect_allele,
-        other_allele_col = outcome_other_allele,
-        eaf_col = outcome_eaf,
-        pval_col = outcome_pval,
-        phenotype_col = 'outcome'
-      )
-      dat_harmonised <- nn_harmonise_data(
+      if (outcome_source=='other'){
+        snps <- exp_dat_clumped[['SNP']]
+        out_dat <- subset(outcome_row_data,SNP  %in% snps)
+      }else{
+        out_dat <- nnMR::nn_read_outcome_data(
+          snps = exp_dat_clumped$SNP,
+          filename = outcome_row_data,
+          #sep = "\t",
+          snp_col = outcome_snp,
+          beta_col = outcome_beta,
+          se_col = outcome_se,
+          effect_allele_col = outcome_effect_allele,
+          other_allele_col = outcome_other_allele,
+          eaf_col = outcome_eaf,
+          pval_col = outcome_pval
+        )
+      }
+      dat_harmonised <- nnMR::nn_harmonise_data(
         exposure_dat =  exp_dat_clumped,
         outcome_dat = out_dat
       )
+
       if (nrow(dat_harmonised)<3){
-        data_row <- data.frame('exposure'=file_id,'outcome'=outcome_source,'p_threshold'=p_threshold,'kb'=kb,'r2'=r2,
-                               'NO.SNP'=nrow(dat_harmonised),'beta'=NA,
-                               'p.value'=NA,'or.95CI'=NA)
-        if (!file.exists(final_path)){
-          write.csv(data_row,final_path)
-        }else{
-          existing_data <- read.csv(final_path)[,-1]
-          new_data <- rbind(existing_data,data_row)
-          write.csv(new_data,final_path)
-        }
         checkpoint <<- c(checkpoint,file_id)
         save(checkpoint,file = checkpoint_path)
         now_count <<- now_count+1
@@ -185,42 +169,104 @@ met_486 <- function(exposure_path,outcome_path,
         next
       }
 
-      #write.csv(dat_harmonised,paste0(file_id,'_harmonised.csv'))
-      res <- nn_mr(dat_harmonised)
+
+      res <- TwoSampleMR::mr(dat_harmonised,method_list = c('mr_egger_regression','mr_weighted_median','mr_ivw'))
       reg <- generate_odds_ratios(res)
-      s <- reg[reg$method=='Inverse variance weighted','nsnp']
-      b <- reg[reg$method=='Inverse variance weighted','b']
-      p <- reg[reg$method=='Inverse variance weighted','pval']
-      o <- reg[reg$method=='Inverse variance weighted','or']
-      lo <- reg[reg$method=='Inverse variance weighted','or_lci95']
-      uo <- reg[reg$method=='Inverse variance weighted','or_uci95']
-      orr <- paste0(round(o,3),'(',round(lo,3),'-',round(uo,3),')')
-      if (p<=0.05){
-        cat('P-value：',round(p,3),'*\n',sep = '')
-      }else{
-        cat('P-value：',round(p,3),'\n',sep = '')
+      if (reg[reg$method=='Inverse variance weighted','pval']>0.05){
+        checkpoint <<- c(checkpoint,file_id)
+        save(checkpoint,file = checkpoint_path)
+        now_count <<- now_count+1
+        cat('P值不显著\n')
+        cat('P:',reg[reg$method=='Inverse variance weighted','pval'],sep = '')
+        next
       }
-      data_row <- data.frame('exposure'=file_id,'outcome'=outcome_source,'p_threshold'=p_threshold,'kb'=kb,'r2'=r2,'NO.SNP'=s,'beta'=b,
-                             'p.value'=p,'or.95CI'=orr)
-      if (!file.exists(final_path)){
-        write.csv(data_row,final_path)
-      }else{
-        existing_data <- read.csv(final_path)[,-1]
-        new_data <- rbind(existing_data,data_row)
-        write.csv(new_data,final_path)
+
+      if (reg[reg$method=='MR Egger','b']*reg[reg$method=='Weighted median','b']>0&
+          reg[reg$method=='MR Egger','b']*reg[reg$method=='Inverse variance weighted','b']>0&
+          reg[reg$method=='Weighted median','b']*reg[reg$method=='Inverse variance weighted','b']>0){
+
+        write.csv(dat_harmonised,paste0('harmonise_file/',file_id,'_harmonised.csv'))
+        tryCatch({
+          presso <<- TwoSampleMR::run_mr_presso(dat_harmonised,NbDistribution = 5000)
+          outlier_corrected_p <<- presso[[1]]$`Main MR results`$`P-value`[2]
+          global_p <<- presso[[1]]$`MR-PRESSO results`$`Global Test`$Pvalue
+          outliers <<- presso[[1]]$`MR-PRESSO results`$`Distortion Test`$`outliers Indices`
+          if (is.null(outliers)){
+            presso_dat <<- data.frame(list('exposure'=file_id,'PRESSO_outlier_corrected_p'=outlier_corrected_p,
+                                           'PRESSO_global_p'=global_p,'PRESSO_outliers'=NA))
+          }else{
+            presso_dat <<- data.frame(list('exposure'=file_id,'PRESSO_outlier_corrected_p'=outlier_corrected_p,
+                                           'PRESSO_global_p'=global_p,'PRESSO_outliers'=outliers))
+          }
+        },error=function(error){
+          presso_dat <<- data.frame(list('exposure'=file_id,'PRESSO_outlier_corrected_p'=NA,
+                                         'PRESSO_global_p'=NA,'PRESSO_outliers'=NA))
+        })
+
+        data <- merge(reg,presso_dat,by='exposure')[c(1:3),-c(2,3)]
+        data$outcome <- outcome_name
+
+        # dat_harmonised <- data.table::fread('C:/Users/Zz/Desktop/gastroduodenal/remake/harmonise_file/M01110_harmonised.csv')
+        ple <- mr_pleiotropy_test(dat_harmonised)[,-c(1:3,6)]
+        ple$exposure <- file_id
+        colnames(ple)[3] <- 'plei_pval'
+
+
+        ht <- mr_heterogeneity(dat_harmonised)[2,-c(1:3,5)]
+        ht$i <- (ht$Q-ht$Q_df)/ht$Q
+        ht$exposure <- file_id
+
+
+        mgx <- merge(ple,ht,by='exposure')
+        new <- merge(data,mgx,by='exposure')
+        data <- new
+
+
+
+        if (!file.exists(final_path)){
+          data.table::fwrite(data,final_path)
+        }else{
+          existing_data <- data.table::fread(final_path)
+          new_data <- rbind(existing_data,data)
+          data.table::fwrite(new_data,final_path)
+        }
+
+        res_single <- TwoSampleMR::mr_singlesnp(dat_harmonised)
+        res_loo <- TwoSampleMR::mr_leaveoneout(dat_harmonised)
+        p1 <- TwoSampleMR::mr_scatter_plot(res, dat_harmonised)
+
+        ggplot2::ggsave(p1[[1]], file=paste0('./plot/',file_id,"_res.pdf"), width=7, height=7)
+
+
+        #森林图
+        p2 <- TwoSampleMR::mr_forest_plot(res_single)
+        ##保存图片
+        ggplot2::ggsave(p2[[1]], file=paste0('./plot/',file_id,"_forest.pdf"), width=7, height=7)
+
+
+        ##留一法图
+        p3 <- TwoSampleMR::mr_leaveoneout_plot(res_loo)
+        ##保存图片
+        ggplot2::ggsave(p3[[1]], file=paste0('./plot/',file_id,"_loo.pdf"), width=7, height=7)
+
+
+        ##漏斗图
+        res_single <- TwoSampleMR::mr_singlesnp(dat_harmonised)
+        p4 <- TwoSampleMR::mr_funnel_plot(res_single)
+        ##保存图片
+        ggplot2::ggsave(p4[[1]], file=paste0('./plot/',file_id,"_single.pdf"), width=7, height=7)
+
       }
-      checkpoint <<- c(checkpoint,file_id)
-      save(checkpoint,file = checkpoint_path)
+      else{
+        cat('(',now_count,'/',total_count,') ',file_id,'...已跳过\n',sep = '')
+      }
+      now_count <<- now_count+1
 
-
-
-    }
-    else{
-      cat('(',now_count,'/',total_count,') ',file_id,'...已跳过\n',sep = '')
-    }
-    now_count <<- now_count+1
-
-
+    }else{
+      cat('不同号\n')
+      now_count<<-now_count+1
+      next
+      }
 
 }
   # 统计时间

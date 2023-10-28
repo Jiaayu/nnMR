@@ -17,5 +17,4 @@ Imports:
     readxl
 Depends: 
     dplyr,
-    plinkbinr,
-    TwoSampleMR
+    R (>= 2.10)

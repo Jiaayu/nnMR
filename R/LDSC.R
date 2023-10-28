@@ -1,3 +1,4 @@
+#' @export
 nn_LDSC<-function(expo,outcome,an,sample_prev=NA,
                   population_prev=NA,ld,wld,chr_filter=c(1:22),n_blocks=200){
   id.o<-outcome$id.outcome[1]
