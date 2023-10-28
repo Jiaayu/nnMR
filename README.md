@@ -4,11 +4,11 @@
 ```
 install.packages("devtools")
 ```
-3. 安装nnMR
+2. 安装nnMR
 ```
 devtools::install_github("Jiaayu/nnMR")
 ```
-5. 载入nnMR
+3. 载入nnMR
 ```
 library(nnMR)
 ```
