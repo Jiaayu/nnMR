@@ -50,6 +50,11 @@ suppressMessages(immnune_auto(exposure_path='D:/immune/csv',outcome_data=outcome
 7. clump_r2,clump_kb:clump使用的r2和kb，默认为0.1和500
 8. bfile_path:clump所需要的文件路径
 
+#### 循环结束后进行ID-表型转换
+```
+transform_immune_process(dat='result.csv')
+```
+
 ## 结局文件的处理（以芬兰数据库为例）
 1. 读取结局
 2. 增加一列samplesize，值为样本量
