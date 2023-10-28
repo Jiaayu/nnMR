@@ -1,30 +1,46 @@
 # nnMR
+## 安装及载入nnMR
+1. 如果没有安装devtools则安装devtools
+```
+install.packages("devtools")
+```
+3. 安装nnMR
+```
+devtools::install_github("Jiaayu/nnMR")
+```
+5. 载入nnMR
+```
+library(nnMR)
+```
 ## 一些常用的函数
-### 486种代谢物批量分析
+### 一、486种代谢物批量分析
 示例
-met_486(exposure_path='D:\\486\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+~~met_486(exposure_path='D:\\486\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
         p_threshold=5e-6,kb=10000,r2=0.001,outcome_source = 'finn')
 exposure_path:暴露所在的路径 文件需要为csv
 outcome_path:结局所在的路径
 p_threshold,kb,r2为筛选和clump参数
-outcome_source可选"finn"和"ieu"
+outcome_source可选"finn"和"ieu"~~
 
-### 1400种代谢物批量分析
-met_1400(exposure_path='D:\\1400\\exposure\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
-         p_threshold=1e-6,kb=10000,r2=0.001,outcome_source = 'finn')
+### 二、1400种代谢物批量分析
+~~met_1400(exposure_path='D:\\1400\\exposure\\已处理',outcome_path='finngen_R9_DM_NEPHROPATHY_EXMORE',
+         p_threshold=1e-6,kb=10000,r2=0.001,outcome_source = 'finn')~~
 同上
 
-### LDSC批量分析
-nn_LDSC_auto(exposure_path='D:\\1400\\原文件',exposure_source=1400,
+### 三、LDSC批量分析
+~~nn_LDSC_auto(exposure_path='D:\\1400\\原文件',exposure_source=1400,
              outcome_path='finngen_R9_K11_GASTRODUOULC.gz',outcome_source='finn',outcome_case=329603)
 exposure_source可选1400、486或rewrite
-outcome_case根据查到的信息进行填写
+outcome_case根据查到的信息进行填写~~
 
 
-### 731种免疫循环批量分析
+### 四、731种免疫循环批量分析
+```
 immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path='result.csv',
                          multiprocess=FALSE,start_num=NA,end_num=NA,
-                         exposure_pval=1e-5,clump_r2=0.1,clump_kb=500,bfile_path='D:\\clump_pop\\EUR')
+                         exposure_pval=1e-5,clump_r2=0.1,clump_kb=500,bfile_path='D:/clump_pop/EUR')
+```
+
 1. exposure_path:为731种免疫细胞的csv文件所在目录
 2. outcome_data:必须为数据框，为结局数据，**请看以下结局文件的处理**
 3. output_path:为输出结果文件的名字，默认为result.csv，如果使用多线程分析则每个线程输出文件名字必须不同（否则会覆盖）
@@ -34,12 +50,13 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
 7. clump_r2,clump_kb:clump使用的r2和kb，默认为0.1和500
 8. bfile_path:clump所需要的文件路径
 
-## 结局文件的处理
+## 结局文件的处理（以芬兰数据库为例）
 1. 读取结局
 2. 增加一列samplesize，值为样本量
 3. 增加一列phenotype，值为结局的疾病名
 示例代码：
-out_dat <- fread('finngen_R9_L12_ATOPIC.gz')
+```
+out_dat <- data.table::fread('finngen_R9_L12_ATOPIC.gz')
 out_dat$samplesize <- 350062
 out_dat$phenotype <- 'Atopic dermatitis'
 out_dat <- TwoSampleMR::format_data(dat = out_dat,type = 'outcome',
@@ -47,3 +64,4 @@ out_dat <- TwoSampleMR::format_data(dat = out_dat,type = 'outcome',
                                     effect_allele_col = 'alt',other_allele_col = 'ref',
                                     pval_col = 'pval',beta_col = 'beta',se_col = 'sebeta',
                                     eaf_col = 'af_alt',samplesize_col = 'samplesize',phenotype_col = 'phenotype')
+```
