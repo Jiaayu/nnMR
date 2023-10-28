@@ -197,5 +197,90 @@ transform_immune_process <- function(dat='result.csv'){
   writexl::write_xlsx(df,'result_transformed.xlsx')
 }
 
+#' @export
+#'
 
+reverse_mr <- function(){
+  exposure_data
+  exposure_data <- fread('finngen_R9_L12_ATOPIC.gz')
+  exposure_data$samplesize <- 350062
+  exposure_data$phenotype <- 'Atopic dermatitis'
+  exposure_data <- TwoSampleMR::format_data(dat = exposure_data,type = 'exposure',
+                                      snp_col = 'rsids',chr_col = '#chrom',pos_col = 'pos',
+                                      effect_allele_col = 'alt',other_allele_col = 'ref',
+                                      pval_col = 'pval',beta_col = 'beta',se_col = 'sebeta',
+                                      eaf_col = 'af_alt',samplesize_col = 'samplesize',phenotype_col = 'phenotype')
+
+  exposure_pval <- 5e-8
+  clump_kb <- 10000
+  clump_r2 <- 0.001
+  bfile_path <- 'D:/clump_pop/EUR'
+  file_path <- '初筛1e–5_0.1_500.xlsx'
+  outcome_path <- 'D:/immune/已处理的原文件'
+  data("dict_immune")
+  data("transform_immune")
+  # 判断文件传入文件类型，选择不同的读取方法
+  if (grepl('\\.xlsx$',file_path)){
+    file_list <- readxl::read_xlsx(file_path)[[1]]
+    file_list <- unique(file_list)
+  }else if (grepl('\\.xlsx$',file_path)){
+    file_list <- data.table::fread(file_path)[[1]]
+    file_list <- unique(file_list)
+  }else{
+    stop('待分析文件需要为xlsx或csv文件')
+  }
+  # 读取暴露
+  exp_dat <- subset(exposure_data,pval.exposure<exposure_pval)
+  # clump,如果报错则跳过
+  tryCatch({
+    exp_dat_clump <- exp_dat %>%
+      rename(rsid = SNP,
+             pval = pval.exposure) %>%
+      nnMR::nn_ld_clump(dat = .,
+                        clump_kb = clump_kb,
+                        clump_r2 = clump_r2,
+                        clump_p = 1,
+                        plink_bin =plinkbinr::get_plink_exe(),
+                        bfile = bfile_path)%>%
+      rename(SNP = rsid,
+             pval.exposure = pval)
+  },error=function(error){
+    stop('clump出错，请重新调整参数')
+  })
+  # 计算R2，筛选F值
+  exp_dat_clump <- nnMR::filter_F(exp_dat_clump)
+
+
+
+  for (file_id in file_list){
+    outcome_name <- dict_immune[[file_id]]
+    # 读取结局
+    out <- data.table::fread(file.path(outcome_path,paste0(file_id,'.tsv.gz')))
+    out <- subset(out,variant_id %in% exp_dat_clump[['SNP']])
+    out$outcome <- outcome_name
+    outcome_data <- TwoSampleMR::format_data(dat = out,type = 'outcome',
+                                             snp_col = 'variant_id',
+                                             chr_col = 'chromosome',pos_col = 'base_pair_location',
+                                             effect_allele_col = 'effect_allele',other_allele_col = 'other_allele',
+                                             samplesize_col = 'n',eaf_col = 'effect_allele_frequency',
+                                             beta_col = 'beta',se_col = 'standard_error',pval_col = 'p_value',
+                                             phenotype_col = 'outcome')
+    # harmonise
+    dat_harmonised <- TwoSampleMR::harmonise_data(exposure_dat = exp_dat_clump,
+                                                  outcome_dat = outcome_data)
+    # ???
+    if (nrow(dat_harmonised)<3){
+      cat('harmonise后SNP不足，已跳过\n')
+      z <- z+1
+      next
+    }
+    # MR分析
+    res <- TwoSampleMR::mr(dat_harmonised,method_list = c('mr_egger_regression','mr_weighted_median','mr_ivw'))
+    reg <- TwoSampleMR::generate_odds_ratios(res)
+    cat('...P-value:',reg$pval[3])
+
+
+  }
+
+}
 
