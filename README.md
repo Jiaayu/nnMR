@@ -36,9 +36,9 @@ outcome_case根据查到的信息进行填写~~
 
 ### 四、731种免疫循环批量分析
 ```
-immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path='result.csv',
-                         multiprocess=FALSE,start_num=NA,end_num=NA,
-                         exposure_pval=1e-5,clump_r2=0.1,clump_kb=500,bfile_path='D:/clump_pop/EUR')
+suppressMessages(immnune_auto(exposure_path='D:/immune/csv',outcome_data=outcome_data,output_path='result.csv',
+                 multiprocess=FALSE,start_num=NA,end_num=NA,
+                 exposure_pval=1e-5,clump_r2=0.1,clump_kb=500,bfile_path='D:/clump_pop/EUR'))
 ```
 
 1. exposure_path:为731种免疫细胞的csv文件所在目录
