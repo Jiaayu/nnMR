@@ -4,11 +4,11 @@
 ```
 install.packages("devtools")
 ```
-3. 安装nnMR
+2. 安装nnMR
 ```
 devtools::install_github("Jiaayu/nnMR")
 ```
-5. 载入nnMR
+3. 载入nnMR
 ```
 library(nnMR)
 ```
@@ -59,7 +59,7 @@ transform_immune_process(dat='result.csv')
 1. 读取结局
 2. 增加一列samplesize，值为样本量
 3. 增加一列phenotype，值为结局的疾病名
-示例代码：
+4. 示例代码：
 ```
 out_dat <- data.table::fread('finngen_R9_L12_ATOPIC.gz')
 out_dat$samplesize <- 350062
@@ -69,4 +69,22 @@ out_dat <- TwoSampleMR::format_data(dat = out_dat,type = 'outcome',
                                     effect_allele_col = 'alt',other_allele_col = 'ref',
                                     pval_col = 'pval',beta_col = 'beta',se_col = 'sebeta',
                                     eaf_col = 'af_alt',samplesize_col = 'samplesize',phenotype_col = 'phenotype')
+```
+
+## 以下是不同GWAS数据库的格式化代码，方便自用
+##### 芬兰数据库
+```
+data <- TwoSampleMR::format_data(dat = dat,type = 'outcome',
+                                    snp_col = 'rsids',chr_col = '#chrom',pos_col = 'pos',
+                                    effect_allele_col = 'alt',other_allele_col = 'ref',
+                                    pval_col = 'pval',beta_col = 'beta',se_col = 'sebeta',
+                                    eaf_col = 'af_alt')
+```
+##### 731免疫细胞
+```
+data <- TwoSampleMR::format_data(dat = dat,type = 'exposure',
+                                   chr_col = 'chromosome',pos_col = 'base_pair_location',
+                                   effect_allele_col = 'effect_allele',other_allele_col = 'other_allele',
+                                   samplesize_col = 'n',eaf_col = 'effect_allele_frequency',
+                                   beta_col = 'beta',se_col = 'standard_error',pval_col = 'p_value',snp_col = 'variant_id')
 ```
