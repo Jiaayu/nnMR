@@ -1,4 +1,5 @@
 #' @export
+#' @title Auto run the 486 metabolites MR
 #' @author Jieyu
 #' @param exposure_path 暴露文件所在的目录，运行后会遍历该目录的所有文件，逐个与结局跑MR分析
 #' @param outcome_path 结局文件的路径（目前只支持单文件）

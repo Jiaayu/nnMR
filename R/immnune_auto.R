@@ -1,7 +1,26 @@
+#' @param exposure_path 731种免疫细胞的csv文件所在目录
+#' @param outcome_data 必须为数据框格式的结局数据
+#' @param output_path 输出结果文件的名字，默认为result.csv，如果使用多线程分析则每个线程输出文件名字必须不同（否则会覆盖）
+#' @param multiprocess 是否启用多线程，默认关闭
+#' @param start_num 多线程的分析起点和终点，如果要使用多线程，则分别设置每个线程的起点和终点，比如线程1设置为1和350，线程2设置为351和731（总共731）
+#' @param end_num 多线程的分析起点和终点，如果要使用多线程，则分别设置每个线程的起点和终点，比如线程1设置为1和350，线程2设置为351和731（总共731）
+#' @param exposure_pval 筛选暴露的P值，默认为1e-5
+#' @param clump_r2 clump使用的r2和kb，默认为0.1和500
+#' @param clump_kb clump使用的r2和kb，默认为0.1和500
+#' @param bfile_path clump所需要的文件路径
+#' @title Auto run 731 immune cells MR
+#' @examples
+#' suppressMessages(immnune_auto(exposure_path='D:/immune/csv',
+#'                  outcome_data=outcome_data,output_path='result.csv',
+#'                  multiprocess=FALSE,start_num=NA,end_num=NA,
+#'                  exposure_pval=1e-5,clump_r2=0.1,clump_kb=500,
+#'                  bfile_path='D:/clump_pop/EUR'))
+#'
+#'
 #' @export
 immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path='result.csv',
                          multiprocess=FALSE,start_num=NA,end_num=NA,
-                         exposure_pval=1e-5,clump_r2=0.1,clump_kb=500,bfile_path='D:\\clump_pop\\EUR'){
+                         exposure_pval=1e-5,clump_r2=0.1,clump_kb=500,bfile_path='D:/clump_pop/EUR'){
 
   # 待传入
   start_time <- proc.time()[3]
@@ -130,8 +149,6 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
     new <- merge(data,mgx,by='exposure')
     data <- new[,-c(2,3)]
 
-
-
     if (!file.exists(output_path)){
       data.table::fwrite(data,output_path)
     }else{
@@ -140,36 +157,9 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
       data.table::fwrite(new_data,output_path)
     }
 
-
-    # 创建文件夹并绘图
-    if (!dir.exists('plot')){
-      dir.create('plot')
-    }
-
-    res_single <- TwoSampleMR::mr_singlesnp(dat_harmonised)
-    res_loo <- TwoSampleMR::mr_leaveoneout(dat_harmonised)
-    p1 <- TwoSampleMR::mr_scatter_plot(res, dat_harmonised)
-
-    ggplot2::ggsave(p1[[1]], file=paste0('./plot/',file_id,"_res.pdf"), width=7, height=7)
+    creating_mr_plots(dat_harmonised=dat_harmonised,res=res,file_id=file_id)
 
 
-    #森林图
-    p2 <- TwoSampleMR::mr_forest_plot(res_single)
-    ##保存图片
-    ggplot2::ggsave(p2[[1]], file=paste0('./plot/',file_id,"_forest.pdf"), width=7, height=7)
-
-
-    ##留一法图
-    p3 <- TwoSampleMR::mr_leaveoneout_plot(res_loo)
-    ##保存图片
-    ggplot2::ggsave(p3[[1]], file=paste0('./plot/',file_id,"_loo.pdf"), width=7, height=7)
-
-
-    ##漏斗图
-    res_single <- TwoSampleMR::mr_singlesnp(dat_harmonised)
-    p4 <- TwoSampleMR::mr_funnel_plot(res_single)
-    ##保存图片
-    ggplot2::ggsave(p4[[1]], file=paste0('./plot/',file_id,"_single.pdf"), width=7, height=7)
     cat('ok\n')
   }
   # 统计时间
