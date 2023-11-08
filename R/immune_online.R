@@ -21,7 +21,7 @@
 
 
 
-immnune_auto <- function(outcome_data,output_path='result.csv',
+immnune_online <- function(outcome_data,output_path='result.csv',
                          multiprocess=FALSE,start_num=NA,end_num=NA,
                          exposure_pval=1e-5,clump_r2=0.1,clump_kb=500){
 
