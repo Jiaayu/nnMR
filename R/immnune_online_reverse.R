@@ -154,6 +154,7 @@ immnune_online_reverse <- function(exposure_data,output_path='result_reverse.csv
                                      'PRESSO_global_p'=NA,'PRESSO_outliers'=NA))
     })
     # 整合数据
+    reg$exposure <- file_id
     data <- merge(reg,presso_dat,by ='exposure')[c(1:3),]
     ple <- TwoSampleMR::mr_pleiotropy_test(dat_harmonised)[,-c(1:3,6)]
     ple$exposure <- file_id
@@ -162,6 +163,7 @@ immnune_online_reverse <- function(exposure_data,output_path='result_reverse.csv
 
     ht <- TwoSampleMR::mr_heterogeneity(dat_harmonised)[2,-c(1:3,5)]
     ii <- (ht$Q-ht$Q_df)/ht$Q
+    ht$exposure <- file_id
     if (ii<0){
       ht$I2 <- 0
     }else{
