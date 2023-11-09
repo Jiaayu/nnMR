@@ -65,6 +65,20 @@ suppressMessages(immnune_online(outcome_data,output_path='result.csv',
 6. exposure_pval:筛选暴露的P值，默认为1e-5
 7. clump_r2,clump_kb:clump使用的r2和kb，默认为0.1和500
 
+### 六、731种免疫循环在线 <反向> 批量分析
+```
+suppressMessages(immnune_online_reverse(exposure_data,output_path='result_reverse.csv',
+                                        multiprocess=FALSE,start_num=NA,end_num=NA,
+                                        exposure_pval=5e-8,clump_r2=0.001,clump_kb=10000'))
+```
+
+1. exposure_data:必须为数据框格式的暴露数据，**注意format函数把type改为exposure**
+3. output_path:为输出结果文件的名字，默认为result_reverse.csv，如果使用多线程分析则每个线程输出文件名字必须不同（否则会覆盖）
+4. multiprocess:是否启用多线程，默认关闭
+5. start_num, end_num:多线程的分析起点和终点，如果要使用多线程，则分别设置每个线程的起点和终点，比如线程1设置为1和350，线程2设置为351和731（总共731）
+6. exposure_pval:筛选暴露的P值，默认为5e-8
+7. clump_r2,clump_kb:clump使用的r2和kb，默认为0.001和10000
+
 #### 循环结束后进行ID-表型转换
 ```
 transform_immune_process(dat='result.csv')
