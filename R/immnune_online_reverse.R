@@ -109,17 +109,21 @@ immnune_online_reverse <- function(exposure_data,output_path='result_reverse.csv
       })
     }
 
-    if (nrow(out_dat)<3){
-      cat('结局snp不足，已跳过\n')
-      z <- z+1
-      next
-    }
+
+
 
 
 
     # harmonise
-    dat_harmonised <- TwoSampleMR::harmonise_data(exposure_dat = exp_dat_clump,
-                                                  outcome_dat = out_dat)
+    tryCatch({
+      dat_harmonised <- TwoSampleMR::harmonise_data(exposure_dat = exp_dat_clump,
+                                                    outcome_dat = out_dat)
+    },error=function(error){
+      cat('SNP不足，已跳过\n')
+      z <- z+1
+      next
+    })
+
     # 如果harmonise后SNP少于3个，则跳过
     if (nrow(dat_harmonised)<3){
       cat('harmonise后SNP不足，已跳过\n')
