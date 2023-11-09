@@ -190,7 +190,7 @@ immnune_online_reverse <- function(exposure_data,output_path='result_reverse.csv
       data.table::fwrite(new_data,output_path)
     }
 
-    creating_mr_plots(dat_harmonised=dat_harmonised,res=res)
+    creating_mr_plots(dat_harmonised=dat_harmonised,res=res,file_id=file_id)
 
     z <- z+1
     cat('ok\n')
