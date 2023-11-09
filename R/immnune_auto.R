@@ -159,7 +159,7 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
 
     creating_mr_plots(dat_harmonised=dat_harmonised,res=res,file_id=file_id)
 
-
+    z <- z+1
     cat('ok\n')
   }
   # 统计时间

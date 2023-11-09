@@ -1,5 +1,5 @@
-#' @param outcome_data 必须为数据框格式的结局数据
-#' @param output_path 输出结果文件的名字，默认为result.csv，如果使用多线程分析则每个线程输出文件名字必须不同（否则会覆盖）
+#' @param exposure_data 必须为数据框格式的暴露数据
+#' @param output_path 输出结果文件的名字，默认为result_reverse.csv，如果使用多线程分析则每个线程输出文件名字必须不同（否则会覆盖）
 #' @param multiprocess 是否启用多线程，默认关闭
 #' @param start_num 多线程的分析起点和终点，如果要使用多线程，则分别设置每个线程的起点和终点，比如线程1设置为1和350，线程2设置为351和731（总共731）
 #' @param end_num 多线程的分析起点和终点，如果要使用多线程，则分别设置每个线程的起点和终点，比如线程1设置为1和350，线程2设置为351和731（总共731）
@@ -8,26 +8,39 @@
 #' @param clump_kb clump使用的r2和kb，默认为0.1和500
 #' @title Auto run 731 immune cells MR
 #' @examples
-#' suppressMessages(immnune_auto(exposure_path='D:/immune/csv',
-#'                  outcome_data=outcome_data,output_path='result.csv',
-#'                  multiprocess=FALSE,start_num=NA,end_num=NA,
-#'                  exposure_pval=1e-5,clump_r2=0.1,clump_kb=500,
-#'                  bfile_path='D:/clump_pop/EUR'))
+#' suppressMessages(immnune_online_reverse(exposure_data,output_path='result_reverse.csv',
+#'                                         multiprocess=FALSE,start_num=NA,end_num=NA,
+#'                                         exposure_pval=5e-8,clump_r2=0.001,clump_kb=10000'))
 #'
 #'
 #' @export
 #'
 #'
 
-
-
-immnune_online <- function(outcome_data,output_path='result.csv',
+# setwd('C:/Users/Zz/Desktop/test_immune')
+# data <- data.table::fread('finngen_R9_K11_GASTRODUOULC.gz')
+#
+# out_dat <- data
+# out_dat$samplesize <- 350062
+# out_dat$phenotype <- 'gastro'
+# out_dat <- TwoSampleMR::format_data(dat = out_dat,type = 'exposure',
+#                                     snp_col = 'rsids',chr_col = '#chrom',pos_col = 'pos',
+#                                     effect_allele_col = 'alt',other_allele_col = 'ref',
+#                                     pval_col = 'pval',beta_col = 'beta',se_col = 'sebeta',
+#                                     eaf_col = 'af_alt',samplesize_col = 'samplesize',phenotype_col = 'phenotype')
+# exposure_data <- out_dat
+# library(nnMR)
+# exposure_pval=5e-8
+# clump_r2=0.001
+# clump_kb=10000
+# output_path <- 'result.csv'
+immnune_online_reverse <- function(exposure_data,output_path='result_reverse.csv',
                          multiprocess=FALSE,start_num=NA,end_num=NA,
-                         exposure_pval=1e-5,clump_r2=0.1,clump_kb=500){
+                         exposure_pval=5e-8,clump_r2=0.001,clump_kb=10000){
 
   # 待传入
   start_time <- proc.time()[3]
-  outcome_name <- outcome_data$outcome[1]
+  exposure_name <- exposure_data$exposure[1]
 
   # 设置前置数据
   data("dict_immune")
@@ -47,12 +60,31 @@ immnune_online <- function(outcome_data,output_path='result.csv',
     save_id <<- NULL
   }
 
+
+
+  #==========================
+  # 处理暴露
+  # 读取暴露并筛选
+  exp_dat <- subset(exposure_data,pval.exposure<exposure_pval)
+  exp_dat <- nnMR::filter_F(exp_dat)
+  # 在线CLUMP
+  while (TRUE) {
+    tryCatch({
+      exp_dat_clump <- TwoSampleMR::clump_data(exp_dat,clump_kb = clump_kb,clump_r2 = clump_r2)
+      break
+    },error=function(error){
+      cat('error 502, retrying...\n')
+    })
+  }
+  # 添加exposure名字
+  exp_dat_clump$exposure <- exposure_name
+
   # 开始循环
   for (file_id in file_list){
     skip <- FALSE
-    # file_id <- file_list[1]
+    file_id <- file_list[1]
     # file_id <- 'GCST90001500'
-    exposure_name <- dict_immune[[file_id]]
+    outcome_name <- dict_immune[[file_id]]
     cat('(',z,'/',zz,') Analysing',' \'',exposure_name,'\'',' to \'',outcome_name,'\'',sep = '')
     # 判断是否已经做过
     if (file_id %in% save_id){
@@ -60,23 +92,23 @@ immnune_online <- function(outcome_data,output_path='result.csv',
       cat('...已跳过\n')
       next
     }
-    # 读取暴露并筛选
+
+
+
+    #==========================
+    # 处理结局
     file_id_gwas <- paste0('ebi-a-',file_id)
+    # 在线提取结局
     while (TRUE) {
       tryCatch({
-        exp_dat <- TwoSampleMR::extract_instruments(outcomes = file_id_gwas,p1=exposure_pval,clump = TRUE,p2=1,r2=clump_r2,
-                                                    kb=clump_kb)
+        out_dat <- TwoSampleMR::extract_outcome_data(snps = exp_dat_clump$SNP,outcomes = file_id_gwas)
         break
       },error=function(error){
         cat('error 502, retrying...\n')
       })
     }
 
-    # 计算R2，筛选F值
-    exp_dat_clump <- nnMR::filter_F(exp_dat)
-    exp_dat_clump$exposure <- file_id
-    # 读取结局并提取相关数据
-    out_dat <- subset(outcome_data,SNP %in% exp_dat_clump[['SNP']])
+
 
     # harmonise
     dat_harmonised <- TwoSampleMR::harmonise_data(exposure_dat = exp_dat_clump,
@@ -99,10 +131,10 @@ immnune_online <- function(outcome_data,output_path='result.csv',
     }
     cat('***','进行后续分析...')
     # 创建文件夹，写入harmonise文件
-    if (!dir.exists('harmonise')){
-      dir.create('harmonise')
+    if (!dir.exists('harmonise_reverse')){
+      dir.create('harmonise_reverse')
     }
-    data.table::fwrite(dat_harmonised,paste0('harmonise/',file_id,'_harmonised.csv'))
+    data.table::fwrite(dat_harmonised,paste0('harmonise_reverse/',file_id,'_harmonised_reverse.csv'))
 
     # PRESSO分析
     tryCatch({
@@ -149,7 +181,7 @@ immnune_online <- function(outcome_data,output_path='result.csv',
       data.table::fwrite(new_data,output_path)
     }
 
-    creating_mr_plots(dat_harmonised=dat_harmonised,res=res,file_id=file_id)
+    creating_mr_plots(dat_harmonised=dat_harmonised,res=res)
 
     z <- z+1
     cat('ok\n')
@@ -166,18 +198,5 @@ immnune_online <- function(outcome_data,output_path='result.csv',
     rm(list = ls())
   }
 }
-
-
-#' @export
-transform_immune_process <- function(dat='result.csv'){
-  dat='result.csv'
-  data("transform_immune")
-  dat <- data.table::fread(dat)
-  dt <- merge(dat,transform_immune[,-4],by.x = 'exposure',by.y = 'ID',all.x = T)
-  col_order <- c("exposure", "TRAIT", "MAPPED_TRAIT", setdiff(names(dt), c("exposure", "TRAIT", "MAPPED_TRAIT")))
-  df <- dt[, col_order, with = FALSE]
-  writexl::write_xlsx(df,'result_transformed.xlsx')
-}
-
 
 
