@@ -64,7 +64,6 @@ suppressMessages(immnune_online(outcome_data,output_path='result.csv',
 5. start_num, end_num:多线程的分析起点和终点，如果要使用多线程，则分别设置每个线程的起点和终点，比如线程1设置为1和350，线程2设置为351和731（总共731）
 6. exposure_pval:筛选暴露的P值，默认为1e-5
 7. clump_r2,clump_kb:clump使用的r2和kb，默认为0.1和500
-8. bfile_path:clump所需要的文件路径
 
 #### 循环结束后进行ID-表型转换
 ```
