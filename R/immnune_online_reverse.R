@@ -76,13 +76,14 @@ immnune_online_reverse <- function(exposure_data,output_path='result_reverse.csv
       cat('error 502, retrying...\n')
     })
   }
+  cat('CLUMP后还剩',nrow(exp_dat_clump),'个SNP\n')
   # 添加exposure名字
   exp_dat_clump$exposure <- exposure_name
 
   # 开始循环
   for (file_id in file_list){
     skip <- FALSE
-    file_id <- file_list[1]
+    # file_id <- file_list[1]
     # file_id <- 'GCST90001500'
     outcome_name <- dict_immune[[file_id]]
     cat('(',z,'/',zz,') Analysing',' \'',exposure_name,'\'',' to \'',outcome_name,'\'',sep = '')
@@ -106,6 +107,12 @@ immnune_online_reverse <- function(exposure_data,output_path='result_reverse.csv
       },error=function(error){
         cat('error 502, retrying...\n')
       })
+    }
+
+    if (nrow(out_dat)<3){
+      cat('结局snp不足，已跳过\n')
+      z <- z+1
+      next
     }
 
 
