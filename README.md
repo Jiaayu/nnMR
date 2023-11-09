@@ -65,7 +65,7 @@ suppressMessages(immnune_online(outcome_data,output_path='result.csv',
 6. exposure_pval:筛选暴露的P值，默认为1e-5
 7. clump_r2,clump_kb:clump使用的r2和kb，默认为0.1和500
 
-### 六、731种免疫循环在线批量分析
+### 六、731种免疫循环在线 <反向> 批量分析
 ```
 suppressMessages(immnune_online_reverse(exposure_data,output_path='result_reverse.csv',
                                         multiprocess=FALSE,start_num=NA,end_num=NA,
