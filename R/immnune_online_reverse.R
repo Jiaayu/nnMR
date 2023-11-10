@@ -19,7 +19,7 @@
 
 # setwd('C:/Users/Zz/Desktop/test_immune')
 # data <- data.table::fread('finngen_R9_K11_GASTRODUOULC.gz')
-#
+# #
 # out_dat <- data
 # out_dat$samplesize <- 350062
 # out_dat$phenotype <- 'gastro'
@@ -121,8 +121,11 @@ immnune_online_reverse <- function(exposure_data,output_path='result_reverse.csv
     },error=function(error){
       cat('SNP不足，已跳过\n')
       z <- z+1
-      next
+      skip <<- TRUE
     })
+    if (skip){
+      next
+    }
 
     # 如果harmonise后SNP少于3个，则跳过
     if (nrow(dat_harmonised)<3){
