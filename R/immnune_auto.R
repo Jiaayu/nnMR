@@ -21,6 +21,27 @@
 immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path='result.csv',
                          multiprocess=FALSE,start_num=NA,end_num=NA,
                          exposure_pval=1e-5,clump_r2=0.1,clump_kb=500,bfile_path='D:/clump_pop/EUR'){
+  # test
+  # setwd('C:/Users/Zz/Desktop/nntest')
+  # exposure_path='D:/immune/exposure'
+  #
+  # out_dat <- data.table::fread('finngen_R9_K11_GASTRODUOULC.gz')
+  # out_dat$samplesize <- 350062
+  # out_dat$phenotype <- 'GASTRODUOULC'
+  # out_dat <- TwoSampleMR::format_data(dat = out_dat,type = 'outcome',
+  #                                     snp_col = 'rsids',chr_col = '#chrom',pos_col = 'pos',
+  #                                     effect_allele_col = 'alt',other_allele_col = 'ref',
+  #                                     pval_col = 'pval',beta_col = 'beta',se_col = 'sebeta',
+  #                                     eaf_col = 'af_alt',samplesize_col = 'samplesize',phenotype_col = 'phenotype')
+  #
+  # outcome_data <- out_dat
+  # output_path='result.csv'
+  # exposure_pval=1e-5
+  # clump_r2=0.1
+  # clump_kb=500
+  # bfile_path='D:/clump_pop/EUR'
+  # library(nnMR)
+
 
   # 待传入
   start_time <- proc.time()[3]
@@ -47,7 +68,7 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
   # 开始循环
   for (file_id in file_list){
     skip <- FALSE
-    # file_id <- file_list[1]
+    # file_id <- file_list[13]
     # file_id <- 'GCST90001500'
     exposure_name <- dict_immune[[file_id]]
     cat('(',z,'/',zz,') Analysing',' \'',exposure_name,'\'',' to \'',outcome_name,'\'',sep = '')
@@ -58,7 +79,13 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
       next
     }
     # 读取暴露并筛选
-    exp_dat <- data.table::fread(file.path(exposure_path,paste0(file_id,'.csv')))
+    if (file.exists(paste0(file_id,'.csv'))){
+      exp_dat <- data.table::fread(file.path(exposure_path,paste0(file_id,'.csv')))
+    }else{
+      exp_dat <- data.table::fread(file.path(exposure_path,paste0(file_id,'_exposure.csv')))
+    }
+
+
     exp_dat <- subset(exp_dat,pval.exposure<exposure_pval)
     # clump,如果报错则跳过
     tryCatch({
@@ -77,7 +104,19 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
       skip <<- TRUE
     })
     if (skip){
-      cat('clump后SNP不足，已跳过\n')
+      skip_data <- data.frame(list('exposure'=exposure_name,'outcome'=outcome_name,'method'=NA,'nsnp'=0,'b'=NA,
+                                   'se'=NA,'pval'=NA,'lo_ci'=NA,'up_ci'=NA,'or'=NA,'or_lci95'=NA,
+                              'or_uci95'=NA,'file_id'=file_id,'egger_intercept'=NA,'pleiotropy_pval'=NA,
+                              'Q'=NA,'Q_df'=NA,'Q_pval'=NA,'I2'=NA))
+      if (!file.exists(output_path)){
+        data.table::fwrite(skip_data,output_path)
+      }else{
+        existing_data <- data.table::fread(output_path)
+        new_data <- rbind(existing_data,skip_data)
+        data.table::fwrite(new_data,output_path)
+      }
+
+      cat('...clump后SNP不足\n')
       z <- z+1
       next
     }
@@ -91,7 +130,18 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
                                                   outcome_dat = out_dat)
     # 如果harmonise后SNP少于3个，则跳过
     if (nrow(dat_harmonised)<3){
-      cat('harmonise后SNP不足，已跳过\n')
+      cat('...harmonise后SNP不足\n')
+      skip_data <- data.frame(list('exposure'=exposure_name,'outcome'=outcome_name,'method'=NA,'nsnp'=nrow(dat_harmonised),'b'=NA,
+                                   'se'=NA,'pval'=NA,'lo_ci'=NA,'up_ci'=NA,'or'=NA,'or_lci95'=NA,
+                                   'or_uci95'=NA,'file_id'=file_id,'egger_intercept'=NA,'pleiotropy_pval'=NA,
+                                   'Q'=NA,'Q_df'=NA,'Q_pval'=NA,'I2'=NA))
+      if (!file.exists(output_path)){
+        data.table::fwrite(skip_data,output_path)
+      }else{
+        existing_data <- data.table::fread(output_path)
+        new_data <- rbind(existing_data,skip_data)
+        data.table::fwrite(new_data,output_path)
+      }
       z <- z+1
       next
     }
@@ -101,11 +151,9 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
     cat('...P-value:',reg$pval[3])
     # 如果P不显著则跳过
     if (reg$pval[3]>0.05){
-      cat('...P值不显著，已跳过\n')
-      z <- z+1
-      next
+      cat('...P值不显著...')
     }
-    cat('***','进行后续分析...')
+    # cat('***','进行后续分析...')
     # 创建文件夹，写入harmonise文件
     if (!dir.exists('harmonise')){
       dir.create('harmonise')
@@ -113,26 +161,27 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
     data.table::fwrite(dat_harmonised,paste0('harmonise/',file_id,'_harmonised.csv'))
 
     # PRESSO分析
-    tryCatch({
-      presso <<- TwoSampleMR::run_mr_presso(dat_harmonised,NbDistribution = 5000)
-      outlier_corrected_p <<- presso[[1]]$`Main MR results`$`P-value`[2]
-      global_p <<- presso[[1]]$`MR-PRESSO results`$`Global Test`$Pvalue
-      outliers <<- presso[[1]]$`MR-PRESSO results`$`Distortion Test`$`outliers Indices`
-      if (is.null(outliers)){
-        presso_dat <<- data.frame(list('exposure'=file_id,'PRESSO_outlier_corrected_p'=outlier_corrected_p,
-                                       'PRESSO_global_p'=global_p,'PRESSO_outliers'=NA))
-      }else{
-        presso_dat <<- data.frame(list('exposure'=file_id,'PRESSO_outlier_corrected_p'=outlier_corrected_p,
-                                       'PRESSO_global_p'=global_p,'PRESSO_outliers'=outliers))
-      }
-    },error=function(error){
-      presso_dat <<- data.frame(list('exposure'=file_id,'PRESSO_outlier_corrected_p'=NA,
-                                     'PRESSO_global_p'=NA,'PRESSO_outliers'=NA))
-    })
+    # tryCatch({
+    #   presso <<- TwoSampleMR::run_mr_presso(dat_harmonised,NbDistribution = 5000)
+    #   outlier_corrected_p <<- presso[[1]]$`Main MR results`$`P-value`[2]
+    #   global_p <<- presso[[1]]$`MR-PRESSO results`$`Global Test`$Pvalue
+    #   outliers <<- presso[[1]]$`MR-PRESSO results`$`Distortion Test`$`outliers Indices`
+    #   if (is.null(outliers)){
+    #     presso_dat <<- data.frame(list('exposure'=file_id,'PRESSO_outlier_corrected_p'=outlier_corrected_p,
+    #                                    'PRESSO_global_p'=global_p,'PRESSO_outliers'=NA))
+    #   }else{
+    #     presso_dat <<- data.frame(list('exposure'=file_id,'PRESSO_outlier_corrected_p'=outlier_corrected_p,
+    #                                    'PRESSO_global_p'=global_p,'PRESSO_outliers'=outliers))
+    #   }
+    # },error=function(error){
+    #   presso_dat <<- data.frame(list('exposure'=file_id,'PRESSO_outlier_corrected_p'=NA,
+    #                                  'PRESSO_global_p'=NA,'PRESSO_outliers'=NA))
+    # })
     # 整合数据
-    data <- merge(reg,presso_dat,by ='exposure')[c(1:3),]
+    # data <- merge(reg,presso_dat,by ='exposure')[c(1:3),]
+    data <- reg
+    data$file_id <- file_id
     ple <- TwoSampleMR::mr_pleiotropy_test(dat_harmonised)[,-c(1:3,6)]
-    ple$exposure <- file_id
     colnames(ple)[3] <- 'pleiotropy_pval'
 
 
@@ -157,10 +206,10 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
       data.table::fwrite(new_data,output_path)
     }
 
-    creating_mr_plots(dat_harmonised=dat_harmonised,res=res,file_id=file_id)
+    nnMR::creating_mr_plots(dat_harmonised=dat_harmonised,res=res,file_id = file_id)
 
     z <- z+1
-    cat('ok\n')
+    cat('分析完成\n')
   }
   # 统计时间
   end_time <- proc.time()[3][[1]]-start_time[[1]]
