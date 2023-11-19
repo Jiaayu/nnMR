@@ -84,6 +84,12 @@ suppressMessages(immnune_online_reverse(exposure_data,output_path='result_revers
 transform_immune_process(dat='result.csv')
 ```
 
+#### 循环结束后进行FDR校正
+```
+nnFDR(filepath='result.csv')
+```
+
+
 ## 结局文件的处理（以芬兰数据库为例）
 1. 读取结局
 2. 增加一列samplesize，值为样本量
