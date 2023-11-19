@@ -223,23 +223,7 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
     cat('进行FDR校正...')
 
     # output_path <- 'C:/Users/Zz/Desktop/MR数据/待完成/nntest/result.csv'
-    row_data <- data.table::fread(output_path)
-    data <- row_data[row_data$method=='Inverse variance weighted'&row_data$nsnp>2]
-    data2 <- data[order(data$pval)]
-
-    for (n in 1:nrow(data2)){
-      if (n==nrow(data2)){
-        data2[n,'ajustP'] <- data2[n,'pval']
-      }else{
-        ajustP <- (data2[n,'pval'])*(nrow(data2)/n)
-        if (ajustP[[1]]>1){
-          ajustP <- 1
-        }
-        data2[n,'ajustP'] <- ajustP
-      }
-    }
-    output_file_path <- paste0(gsub('.csv','',output_path),'_FDR.csv')
-    data.table::fwrite(data2,output_file_path)
+    nnMR::nnFDR(output_path)
 
     cat('完成')
     rm(list = ls())
@@ -250,9 +234,14 @@ immnune_auto <- function(exposure_path='D:/immune/csv',outcome_data,output_path=
 #' @export
 
 nnFDR <- function(filepath='result.csv'){
+  # cat('1')
   row_data <- data.table::fread(filepath)
-  data <- row_data[row_data$method=='Inverse variance weighted'&row_data$nsnp>2]
-  data2 <- data[order(data$pval)]
+  # cat('2')
+  # print(colnames(row_data))
+  data <- subset(row_data, method == 'Inverse variance weighted')
+  # cat('3')
+  data2 <- data.table::setorder(data, pval)
+  # cat('4')
 
   for (n in 1:nrow(data2)){
     if (n==nrow(data2)){
