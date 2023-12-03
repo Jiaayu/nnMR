@@ -63,7 +63,7 @@ common_auto <- function(exposure_data=NA,exposure_type='online',outcome_data,out
 
   # 读取存档
   if (file.exists(output_path)){
-    save_id <<- fread(output_path)[[1]]
+    save_id <<- data.table::fread(output_path)[[1]]
   }else{
     save_id <<- NULL
   }
