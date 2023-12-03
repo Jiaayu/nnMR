@@ -90,6 +90,22 @@ nnFDR(filepath='result.csv')
 ```
 
 
+### 通用MR批量分析
+```
+exposure_data <- c('ebi-a-GCST90038625','ebi-a-GCST90038684')
+suppressMessages(common_auto(exposure_data=exposure_data,exposure_type='online',outcome_data=outcome_data,outcome_type='local',
+            output_path='result.csv',exposure_pval=1e-5,clump_r2=0.1,clump_kb=500))
+```
+
+1. exposure_data:把需要分析的id放入exposure_data
+2. exposure_type:现只有online
+3. outcome_data:提前处理为结局数据
+4. outcome_type:现只有local
+5. output_path:为输出结果文件的名字，默认为result.csv
+8. exposure_pval:筛选暴露的P值，默认为1e-5
+9. clump_r2,clump_kb:clump使用的r2和kb，默认为0.1和500
+
+
 ## 结局文件的处理（以芬兰数据库为例）
 1. 读取结局
 2. 增加一列samplesize，值为样本量
